@@ -1,7 +1,7 @@
 let particles = [];
 let missiles = [];
 let explosions = [];
-let palette = ['#fbf8cc', '#fde4cf', '#ffcfd2', '#f1c0e8', '#cfbaf0', '#a3c4f3', '#90dbf4', '#8eecf5', '#98f5e1', '#b9fbc0'];
+let palette = ['#cdb4db', '#ffc8dd', '#ffafcc', '#bde0fe', '#a2d2ff'];
 let lastSpawnTime = 0;
 let score = 0;
 let timeLeft = 30; // 設定挑戰時間為 30 秒
@@ -38,7 +38,12 @@ function initGame() {
 }
 
 function draw() {
-  background(0); // 背景設定為黑色
+  // 狂暴模式處理：當時間低於 5 秒時，背景會閃爍暗紅色
+  if (gameState === "PLAYING" && timeLeft < 5 && frameCount % 20 < 10) {
+    background(60, 0, 0); 
+  } else {
+    background(0);
+  }
 
   if (gameState === "PLAYING") {
     // 處理倒數計時
@@ -50,8 +55,9 @@ function draw() {
       restartBtn.show();
     }
 
-    // 每隔 5 秒產生一個新物件
-    if (millis() - lastSpawnTime > 5000) {
+    // 處理產生頻率：狂暴模式下每 1 秒產生一個，平時每 5 秒一個
+    let spawnInterval = (timeLeft < 5) ? 1000 : 5000;
+    if (millis() - lastSpawnTime > spawnInterval) {
       spawnParticle();
       lastSpawnTime = millis();
     }
@@ -66,9 +72,15 @@ function draw() {
         let d = dist(particles[i].pos.x, particles[i].pos.y, missiles[j].pos.x, missiles[j].pos.y);
         if (d < particles[i].size / 2) {
           explosions.push(new Explosion(particles[i].pos.x, particles[i].pos.y, particles[i].color));
+          
+          if (particles[i].type === "TIME") {
+            timeLeft += 5; // 加時粒子加 5 秒
+          } else {
+            score++; // 普通粒子加分
+          }
+          
           particles.splice(i, 1);
           missiles.splice(j, 1);
-          score++;
           break;
         }
       }
@@ -123,11 +135,25 @@ function displayGameOver() {
 }
 
 function spawnParticle() {
+  // 15% 機率產生加時粒子
+  let isTimeType = random() < 0.15;
   let x = random(width);
   let y = random(height);
-  let size = random(40, 100);
-  let col = color(random(palette));
-  particles.push(new Particle(x, y, size, col));
+  
+  let size, col, type, speed;
+  if (isTimeType) {
+    type = "TIME";
+    size = random(25, 40); // 比較小
+    col = color('#fff4cc'); // 飽和度低的黃色
+    speed = random(4, 7);   // 速度較快
+  } else {
+    type = "NORMAL";
+    size = random(40, 100);
+    col = color(random(palette));
+    speed = random(0.5, 2.5);
+  }
+  
+  particles.push(new Particle(x, y, size, col, type, speed));
 }
 
 // 滑鼠點擊發射飛彈
@@ -166,18 +192,20 @@ function windowResized() {
 }
 
 class Particle {
-  constructor(x, y, size, col) {
+  constructor(x, y, size, col, type, speed) {
     this.pos = createVector(x, y);
     this.size = size;
     this.color = col;
+    this.type = type;
     // 隨機移動速度
-    this.vel = p5.Vector.random2D().mult(random(0.5, 2.5));
+    this.vel = p5.Vector.random2D().mult(speed);
     this.isCircle = false;
   }
 
   update() {
-    // 移動位置
-    this.pos.add(this.vel);
+    // 移動位置 (狂暴模式下速度提升 2.5 倍)
+    let speedMult = (gameState === "PLAYING" && timeLeft < 5) ? 2.5 : 1;
+    this.pos.add(p5.Vector.mult(this.vel, speedMult));
 
     // 邊界反彈
     if (this.pos.x < 0 || this.pos.x > width) this.vel.x *= -1;
