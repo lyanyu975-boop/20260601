@@ -31,8 +31,8 @@ function initGame() {
   gameState = "PLAYING";
   lastSpawnTime = millis();
   
-  // 初始產生 10 個物件
-  for (let i = 0; i < 10; i++) {
+  // 初始產生 20 個物件
+  for (let i = 0; i < 20; i++) {
     spawnParticle();
   }
 }
@@ -73,6 +73,15 @@ function draw() {
         if (d < particles[i].size / 2) {
           explosions.push(new Explosion(particles[i].pos.x, particles[i].pos.y, particles[i].color));
           
+          // 分裂邏輯：20% 機率分裂，且粒子不能太小以免無限分裂
+          if (random() < 0.2 && particles[i].size > 25) {
+            let p = particles[i];
+            let newSize = p.size * 0.6;
+            let speed = p.vel.mag(); // 保持原本的速度量值
+            particles.push(new Particle(p.pos.x, p.pos.y, newSize, p.color, p.type, speed));
+            particles.push(new Particle(p.pos.x, p.pos.y, newSize, p.color, p.type, speed));
+          }
+
           if (particles[i].type === "TIME") {
             timeLeft += 5; // 加時粒子加 5 秒
           } else {
