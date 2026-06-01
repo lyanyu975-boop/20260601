@@ -1,7 +1,7 @@
 let particles = [];
 let missiles = [];
 let explosions = [];
-let palette = ['#f94144', '#f3722c', '#f8961e', '#f98443', '#f9c74f', '#90be6d', '#43aa8b', '#4d908e', '#577590', '#277da1'];
+let palette = ['#fbf8cc', '#fde4cf', '#ffcfd2', '#f1c0e8', '#cfbaf0', '#a3c4f3', '#90dbf4', '#8eecf5', '#98f5e1', '#b9fbc0'];
 let lastSpawnTime = 0;
 let score = 0;
 let timeLeft = 30; // 設定挑戰時間為 30 秒
